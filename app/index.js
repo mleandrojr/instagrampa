@@ -321,16 +321,14 @@ export default class Instagrampa {
             return;
         }
 
-        await this.gotoProfile(username);
-
         while (!this.canFollowOrUnfollow()) {
             await this.sleep(10 * 60 * 1000);
         }
 
         Logger.log(`Unfollowing ${username}`);
+        await this.gotoProfile(username);
 
         const unfollowButton = await this.findUnfollowButton();
-
         if (!unfollowButton) {
 
             const followButton = await this.findFollowButton();
@@ -349,7 +347,7 @@ export default class Instagrampa {
         const confirmHandle = await this.findUnfollowConfirmButton();
         if (confirmHandle) {
             await confirmHandle.click();
-            await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour);
+            await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .7);
         }
 
         this.checkActionBlocked();
@@ -395,6 +393,20 @@ export default class Instagrampa {
                 continue;
             }
 
+            if (await this.isInFollowedDb(username)) {
+                Logger.warn(`Skipping ${username} for already being followed before`);
+                continue;
+            }
+
+            if (await this.isInUnfollowedDb(username)) {
+                Logger.warn(`Skipping ${username} for already being unfollowed before`);
+                continue;
+            }
+
+            while (!this.canFollowOrUnfollow()) {
+                await this.sleep(10 * 60 * 1000);
+            }
+
             await this.follow(username);
             await this.sleep(this.random(1000, 10000));
         }
@@ -409,16 +421,6 @@ export default class Instagrampa {
      * @param {string} username
      */
     async follow(username) {
-
-        if (await this.isInFollowedDb(username)) {
-            Logger.warn(`Skipping ${username} for already being followed before`);
-            return;
-        }
-
-        if (await this.isInUnfollowedDb(username)) {
-            Logger.warn(`Skipping ${username} for already being unfollowed before`);
-            return;
-        }
 
         await this.gotoProfile(username);
 
@@ -454,10 +456,6 @@ export default class Instagrampa {
         if (this.configs.followRatioMax !== null && ratio > this.configs.followRatioMax) {
             Logger.log(`Account ${username} has too many followers compared to follows, skipping`);
             return;
-        }
-
-        while (!this.canFollowOrUnfollow()) {
-            await this.sleep(10 * 60 * 1000);
         }
 
         if (this.skipPrivateAccounts() && this.isAccountPrivate()) {
@@ -497,7 +495,7 @@ export default class Instagrampa {
             Logger.warn("Follow button did not change state");
         }
 
-        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour);
+        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .7);
     }
 
     /**
