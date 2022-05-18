@@ -349,7 +349,7 @@ export default class Instagrampa {
         const confirmHandle = await this.findUnfollowConfirmButton();
         if (confirmHandle) {
             await confirmHandle.click();
-            await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .7);
+            await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .5);
         }
 
         this.checkActionBlocked();
@@ -497,7 +497,7 @@ export default class Instagrampa {
             Logger.warn("Follow button did not change state");
         }
 
-        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .7);
+        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .5);
     }
 
     /**
