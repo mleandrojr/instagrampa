@@ -123,8 +123,10 @@ export default class Instagrampa {
             this.page = await this.browser.newPage();
             await this.page.setExtraHTTPHeaders({ "Accept-Language": "en" });
 
-            const userAgentGenerated = new UserAgent({ deviceCategory: "desktop" });
-            await this.page.setUserAgent(userAgentGenerated.toString());
+            if (this.configs.randomizeUserAgent) {
+                const userAgentGenerated = new UserAgent({ deviceCategory: "desktop" });
+                await this.page.setUserAgent(userAgentGenerated.toString());
+            }
 
             await this.loadCookies();
 

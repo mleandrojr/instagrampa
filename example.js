@@ -46,6 +46,9 @@ const configs = {
     /* Account's maximum follows. */
     followMaxFollowing: null,
 
+    /* Randomizes the user-agent.  */
+    randomizeUserAgent: true,
+
     /* Follow the accounts who follows these accounts. */
     accountsToScrape: [
         "account1",
