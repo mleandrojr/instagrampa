@@ -604,7 +604,6 @@ export default class Instagrampa {
             return element.querySelector("span").innerText;
         }, handler[0]);
 
-        console.log(following);
         return parseInt(following);
     }
 
@@ -615,7 +614,6 @@ export default class Instagrampa {
             return element.querySelector("span").innerText;
         }, handler[0]);
 
-        console.log(followers);
         return parseInt(followers);
     }
 
