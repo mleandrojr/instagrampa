@@ -916,9 +916,17 @@ export default class Instagrampa {
 
         const handler = await this.page.$x("//div[@role='dialog']");
         return await this.page.evaluate((element, nickname) => {
-            const firstElement = element.querySelectorAll("li")[0];
-            const anchor = firstElement.querySelector("span a");
-            return anchor.getAttribute("href").replaceAll("/", "") === nickname;
+
+            try {
+                const firstElement = element.querySelectorAll("li")[0];
+                const anchor = firstElement.querySelector("span a");
+                return anchor.getAttribute("href").replaceAll("/", "") === nickname;
+
+            } catch (err) {
+                /* We will not touch this user because we got an error. */
+                return true;
+            }
+
         }, handler[0], this.configs.username);
     }
 
