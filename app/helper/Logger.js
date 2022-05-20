@@ -12,6 +12,42 @@
 export default class Logger {
 
     /**
+     * Logger colors.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @type {Object}
+     */
+    static colors = {
+        Reset: "\x1b[0m",
+        Bright: "\x1b[1m",
+        Dim: "\x1b[2m",
+        Underscore: "\x1b[4m",
+        Blink: "\x1b[5m",
+        Reverse: "\x1b[7m",
+        Hidden: "\x1b[8m",
+
+        FgBlack: "\x1b[30m",
+        FgRed: "\x1b[31m",
+        FgGreen: "\x1b[32m",
+        FgYellow: "\x1b[33m",
+        FgBlue: "\x1b[34m",
+        FgMagenta: "\x1b[35m",
+        FgCyan: "\x1b[36m",
+        FgWhite: "\x1b[37m",
+
+        BgBlack: "\x1b[40m",
+        BgRed: "\x1b[41m",
+        BgGreen: "\x1b[42m",
+        BgYellow: "\x1b[43m",
+        BgBlue: "\x1b[44m",
+        BgMagenta: "\x1b[45m",
+        BgCyan: "\x1b[46m",
+        BgWhite: "\x1b[47m"
+    }
+
+    /**
      * Log a message and stack trace to console if the first argument is false.
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
@@ -58,7 +94,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static debug() {
-        console.debug(...Logger.parse(...arguments));
+        console.debug(Logger.colors.FgCyan, ...Logger.parse(...arguments), logger.colors.Reset);
     }
 
     /**
@@ -90,7 +126,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static error() {
-        console.error(...Logger.parse(...arguments));
+        console.error(Logger.colors.FgRed, ...Logger.parse(...arguments), Logger.colors.Reset);
     }
 
     /**
@@ -135,7 +171,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static info() {
-        console.info(...Logger.parse(...arguments));
+        console.info(Logger.colors.FgBlue, ...Logger.parse(...arguments), Logger.colors.Reset);
     }
 
     /**
@@ -146,7 +182,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static log() {
-        console.log(...Logger.parse(...arguments));
+        console.log(Logger.colors.Reset, ...Logger.parse(...arguments));
     }
 
     /**
@@ -207,7 +243,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static warn() {
-        console.warn(...Logger.parse(...arguments));
+        console.warn(Logger.colors.FgYellow, ...Logger.parse(...arguments), Logger.colors.Reset);
     }
 
     /**
