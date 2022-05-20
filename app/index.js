@@ -476,16 +476,15 @@ export default class Instagrampa {
             return;
         }
 
-        if (this.configs.followRatioMax !== null && ratio < this.configs.followRatioMax) {
-            Logger.log(`Account ${username} has too many followers compared to follows, skipping`);
-            return;
-        }
-
-        if (this.configs.followRatioMin !== null && ratio > this.configs.followRatioMin) {
+        if (this.configs.followRatioMin !== null && ratio < this.configs.followRatioMin) {
             Logger.log(`Account ${username} has too many follows compared to followers, skipping`);
             return;
         }
 
+        if (this.configs.followRatioMax !== null && ratio > this.configs.followRatioMax) {
+            Logger.log(`Account ${username} has too many followers compared to follows, skipping`);
+            return;
+        }
 
         if (this.skipPrivateAccounts() && this.isAccountPrivate()) {
             Logger.warn(`Skipping ${username} for being a private account`);
