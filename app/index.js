@@ -99,7 +99,22 @@ export default class Instagrampa {
         this.db.followed = new Db(this.configs.username, "followed");
         this.db.unfollowed = new Db(this.configs.username, "unfollowed");
 
-        this.run();
+        (async () => {
+            try {
+
+                for (;;) {
+                    await this.run();
+                }
+
+            } catch (err) {
+
+                Logger.error(err);
+
+                if (this.browser) {
+                    await this.browser.close();
+                }
+            }
+        })();
     }
 
     /**
@@ -145,48 +160,31 @@ export default class Instagrampa {
      */
     async run() {
 
-        try {
-
-            if (!this.browser) {
-                await this.openBrowser();
-            }
-
-            await this.goHome();
-            await this.pressButton(
-                await this.page.$x('//button[contains(text(), "Save Info")]'), 'Login info dialog: Save Info', 3000
-            );
-
-            await this.pressButton(
-                await this.page.$x('//button[contains(text(), "Not Now")]'), 'Turn on Notifications dialog', 3000
-            );
-
-            await this.saveCookies();
-            await this.setLanguage("en", "English");
-
-            if (this.configs.unfollowNonMutual) {
-                await this.unfollowNonMutual();
-            }
-
-            if (this.configs.accountsToScrape.length) {
-                await this.scrape();
-            }
-
-            Logger.log("Done.");
-
-        } catch (err) {
-
-            Logger.error(err);
-
-            if (this.browser) {
-                await this.browser.close();
-            }
+        if (!this.browser) {
+            await this.openBrowser();
         }
 
-        // await this.run();
-    }
+        await this.goHome();
+        await this.pressButton(
+            await this.page.$x('//button[contains(text(), "Save Info")]'), 'Login info dialog: Save Info', 3000
+        );
 
-    async test() {
-        await this.follow(this.configs.username);
+        await this.pressButton(
+            await this.page.$x('//button[contains(text(), "Not Now")]'), 'Turn on Notifications dialog', 3000
+        );
+
+        await this.saveCookies();
+        await this.setLanguage("en", "English");
+
+        if (this.configs.unfollowNonMutual) {
+            await this.unfollowNonMutual();
+        }
+
+        if (this.configs.accountsToScrape.length) {
+            await this.scrape();
+        }
+
+        Logger.log("Done.");
     }
 
     /**
@@ -347,14 +345,12 @@ export default class Instagrampa {
         await this.sleep(1000);
 
         const confirmHandle = await this.findUnfollowConfirmButton();
-        if (confirmHandle) {
-            await confirmHandle.click();
-            await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .5);
+        if (!confirmHandle) {
+            Logger.warn(`Unfollow confirmation button not found for ${username}`);
+            return;
         }
 
-        this.checkActionBlocked();
-        this.incrementCounter("hourlyUnfollowed", 60 * 60 * 1000);
-        this.incrementCounter("dailyUnfollowed", 60 * 60 * 24 * 1000);
+        await confirmHandle.click();
 
         try {
             await this.db.unfollowed.insert(username, +new Date());
@@ -363,10 +359,16 @@ export default class Instagrampa {
             Logger.error(`An error occurred while saving ${username} to the unfollowed database: ${err}`);
         }
 
+        this.checkActionBlocked();
+        this.incrementCounter("hourlyUnfollowed", 60 * 60 * 1000);
+        this.incrementCounter("dailyUnfollowed", 60 * 60 * 24 * 1000);
+
         const followButton2 = await this.findFollowButton();
         if (!followButton2) {
             Logger.warn("Unfollow button did not change state");
         }
+
+        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .2);
     }
 
     /**
@@ -497,7 +499,7 @@ export default class Instagrampa {
             Logger.warn("Follow button did not change state");
         }
 
-        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .5);
+        await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .2);
     }
 
     /**
