@@ -22,6 +22,9 @@ const configs = {
     /* Unfollows the accounts who doesn't follow you back. */
     unfollowNonMutual: true,
 
+    /* Unfollow the previously followed accounts. */
+    unfollowPreviouslyFollowed: true,
+
     /* Amount of days to wait before unfollowing an account. */
     daysUntilUnfollow: 14,
 

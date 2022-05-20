@@ -155,7 +155,7 @@ export default class Instagrampa {
     /**
      * Instagrampa routines.
      *
-     * @author Marcos Leandro <mleandrojr@yggdrasill.com>
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
      */
     async run() {
@@ -178,6 +178,10 @@ export default class Instagrampa {
 
         if (this.configs.unfollowNonMutual) {
             await this.unfollowNonMutual();
+        }
+
+        if (this.configs.unfollowPreviouslyFollowed) {
+            await this.unfollowPreviouslyFollowed();
         }
 
         if (this.configs.accountsToScrape.length) {
@@ -305,6 +309,26 @@ export default class Instagrampa {
 
             await this.sleep(this.random(1000, 10000));
         }
+    }
+
+    /**
+     * Unfollows previously followed accounts.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     */
+    async unfollowPreviouslyFollowed() {
+
+        Logger.log("Unfollowing previously followed accounts.");
+
+        const followed = this.db.followed;
+        Logger.log(`Found ${followed.length} followed accounts.`);
+
+        for (let username in followed) {
+            await this.unfollow(username);
+        }
+
+        await this.sleep(1000);
     }
 
     /**
@@ -624,8 +648,12 @@ export default class Instagrampa {
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
+     *
+     * @param  {boolean} persistent If true, the list will be read to the end.
+     *
+     * @return {array}
      */
-    async getUsersFromList() {
+    async getUsersFromList(persistent = false) {
 
         Logger.log("Getting users from list");
 
@@ -656,7 +684,7 @@ export default class Instagrampa {
                             }
 
                             /* If the list is too big, let's start a russian roullete. It'll be fun! */
-                            if (scroll > 100 && this.random(0, 10) % 3 === 0) {
+                            if (!persistent && scroll > 100 && this.random(0, 10) % 3 === 0) {
                                 clearInterval(timer);
                                 resolve();
                             }
