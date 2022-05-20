@@ -166,11 +166,11 @@ export default class Instagrampa {
 
         await this.goHome();
         await this.pressButton(
-            await this.page.$x('//button[contains(text(), "Save Info")]'), 'Login info dialog: Save Info', 3000
+            await this.page.$x("//button[contains(text(), \"Save Info\")]"), "Login info dialog: Save Info", 3000
         );
 
         await this.pressButton(
-            await this.page.$x('//button[contains(text(), "Not Now")]'), 'Turn on Notifications dialog', 3000
+            await this.page.$x("//button[contains(text(), \"Not Now\")]"), "Turn on Notifications dialog", 3000
         );
 
         await this.saveCookies();
@@ -206,14 +206,14 @@ export default class Instagrampa {
         const isUserLoggedIn = await this.isUserLoggedIn();
 
         if (!isUserLoggedIn) {
-            await this.page.type('input[name="username"]', this.configs.username, { delay: 50 });
+            await this.page.type("input[name=\"username\"]", this.configs.username, { delay: 50 });
             await this.sleep(1000);
 
-            await this.page.type('input[name="password"]', this.configs.password, { delay: 50 });
+            await this.page.type("input[name=\"password\"]", this.configs.password, { delay: 50 });
             await this.sleep(1000);
 
             for (;;) {
-                const loginButton = (await this.page.$x("//button[.//text() = 'Log In']"))[0];
+                const loginButton = (await this.page.$x("//button[.//text() = \"Log In\"]"))[0];
                 if (loginButton) {
                     await loginButton.click();
                     break;
@@ -271,7 +271,7 @@ export default class Instagrampa {
 
         if (status === 429) {
             throw new Error(
-                "429 Too Many Requests could mean that Instagram suspects you\'re using a bot.\n\
+                "429 Too Many Requests could mean that Instagram suspects you're using a bot.\n\
                 You could try to use the Instagram Mobile app from the same IP for a few days first"
             );
         }
@@ -489,6 +489,7 @@ export default class Instagrampa {
 
         if (this.skipPrivateAccounts() && this.isAccountPrivate()) {
             Logger.warn(`Skipping ${username} for being a private account`);
+            return;
         }
 
         Logger.log(`Following ${username}`);
@@ -566,7 +567,7 @@ export default class Instagrampa {
 
         await this.gotoProfile(username);
         await this.pressButton(
-            await this.page.$x("//header//section//ul//li[3]"), 'Following', 1000
+            await this.page.$x("//header//section//ul//li[3]"), "Following", 1000
         );
 
         let tries = 0;
@@ -575,7 +576,7 @@ export default class Instagrampa {
 
             Logger.log("Waiting for the following list to load");
 
-            const list = await this.page.$x("//div[@aria-label='Following']//li//a");
+            const list = await this.page.$x("//div[@aria-label=\"Following\"]//li//a");
             if (list || tries >= 4) {
                 break;
             }
@@ -602,7 +603,7 @@ export default class Instagrampa {
 
         await this.gotoProfile(username);
         await this.pressButton(
-            await this.page.$x("//header//section//ul//li[2]"), 'Followers', 1000
+            await this.page.$x("//header//section//ul//li[2]"), "Followers", 1000
         );
 
         let tries = 0;
@@ -611,7 +612,7 @@ export default class Instagrampa {
 
             Logger.log("Waiting for the followers list to load");
 
-            const list = await this.page.$x("//div[@aria-label='Followers']//li//a");
+            const list = await this.page.$x("//div[@aria-label=\"Followers\"]//li//a");
             if (list || tries >= 4) {
                 break;
             }
@@ -678,7 +679,7 @@ export default class Instagrampa {
                             scrollable.scrollTop = scrollable.scrollHeight;
                             await new Promise(r => setTimeout(r, 100));
 
-                            const loading = scrollable.querySelectorAll("svg[aria-label='Loading...']");
+                            const loading = scrollable.querySelectorAll("svg[aria-label=\"Loading...\"]");
                             if (totalHeight === scrollable.scrollHeight && loading.length === 0) {
                                 clearInterval(timer);
                                 resolve();
@@ -742,22 +743,22 @@ export default class Instagrampa {
      */
     async findUnfollowButton() {
 
-        const handler1 = await this.page.$x("//header//button[text()='Following']");
+        const handler1 = await this.page.$x("//header//button[text()=\"Following\"]");
         if (handler1.length > 0) {
             return handler1[0];
         }
 
-        const handler2 = await this.page.$x("//header//button[text()='Requested']");
+        const handler2 = await this.page.$x("//header//button[text()=\"Requested\"]");
         if (handler2.length > 0) {
             return handler2[0];
         }
 
-        const handler3 = await this.page.$x("//header//button[*//span[@aria-label='Following']]");
+        const handler3 = await this.page.$x("//header//button[*//span[@aria-label=\"Following\"]]");
         if (handler3.length > 0) {
             return handler3[0];
         }
 
-        const handler4 = await this.page.$x("//header//button[*//*[name()='svg'][@aria-label='Following']]");
+        const handler4 = await this.page.$x("//header//button[*//*[name()=\"svg\"][@aria-label=\"Following\"]]");
         if (handler4.length > 0) {
             return handler4[0];
         }
@@ -774,7 +775,7 @@ export default class Instagrampa {
      * @return {object} Element handler.
      */
     async findUnfollowConfirmButton() {
-        const handler = await this.page.$x("//button[text()='Unfollow']");
+        const handler = await this.page.$x("//button[text()=\"Unfollow\"]");
         return handler[0];
     }
 
@@ -790,12 +791,12 @@ export default class Instagrampa {
      */
     async findButtonWithText(text) {
 
-        let handler = await this.page.$x(`//header//button[contains(.,'${text}')]`);
+        let handler = await this.page.$x(`//header//button[contains(.,"${text}")]`);
         if (handler.length > 0) {
             return handler[0];
         }
 
-        handler = await this.page.$x(`//header//button[text()='${text}']`);
+        handler = await this.page.$x(`//header//button[text()="${text}"]`);
         if (handler.length > 0) {
             return handler[0];
         }
@@ -814,7 +815,7 @@ export default class Instagrampa {
      */
     async setLanguage(code, name) {
 
-        const handler = await this.page.$x(`//select[//option[@value='${code}' and text()='${name}']]`);
+        const handler = await this.page.$x(`//select[//option[@value="${code}" and text()="${name}"]]`);
         if (handler.length < 1) {
             throw new Error("Language selector not found");
         }
@@ -883,7 +884,7 @@ export default class Instagrampa {
      * @return {boolean}
      */
     async isUserLoggedIn() {
-        return (await this.page.$x('//*[@aria-label="Home"]')).length === 1;
+        return (await this.page.$x("//*[@aria-label=\"Home\"]")).length === 1;
     }
 
     /**
@@ -899,7 +900,7 @@ export default class Instagrampa {
      */
     async isLanguageActive(handler, code) {
         return await this.page.evaluate((selectElem, short) => {
-            const optionElem = selectElem.querySelector(`option[value='${short}']`);
+            const optionElem = selectElem.querySelector(`option[value="${short}"]`);
             return optionElem.selected;
         }, handler, code)
     }
@@ -932,7 +933,7 @@ export default class Instagrampa {
 
             Logger.log(`Waiting for the ${username}'s following list to load`);
 
-            const list = await this.page.$x("//div[@role='dialog']//li");
+            const list = await this.page.$x("//div[@role=\"dialog\"]//li");
             if (list.length > 0 || tries >= 4) {
                 break;
             }
@@ -943,7 +944,7 @@ export default class Instagrampa {
 
         await this.sleep(this.random(1000, 3000));
 
-        const handler = await this.page.$x("//div[@role='dialog']");
+        const handler = await this.page.$x("//div[@role=\"dialog\"]");
         return await this.page.evaluate((element, nickname) => {
 
             try {
@@ -994,8 +995,8 @@ export default class Instagrampa {
      * @since  1.0.0
      */
     isAccountPrivate() {
-        const privateString = this.page.$x("//*[text()='This Account is Private']");
-        return privateString.length > 0;
+        const privateString = this.page.$x("//*[text()=\"This Account is Private\"]");
+        return !!privateString.length;
     }
 
     /**
@@ -1018,11 +1019,11 @@ export default class Instagrampa {
      */
     async isActionBlocked() {
 
-        if ((await this.page.$x('//*[contains(text(), "Action Blocked")]')).length > 0) {
+        if ((await this.page.$x("//*[contains(text(), \"Action Blocked\")]")).length > 0) {
             return true;
         }
 
-        if ((await this.page.$x('//*[contains(text(), "Try Again Later")]')).length > 0) {
+        if ((await this.page.$x("//*[contains(text(), \"Try Again Later\")]")).length > 0) {
            return true;
         }
 
@@ -1091,7 +1092,7 @@ export default class Instagrampa {
             }
 
         } catch (err) {
-            Logger.error('No cookies found');
+            Logger.error("No cookies found");
         }
     }
 
@@ -1144,7 +1145,7 @@ export default class Instagrampa {
     async sleep(ms, deviation = 1) {
         const miliseconds = ((Math.random() * deviation) + 1) * ms;
         const seconds =  Math.round(miliseconds / 1000);
-        Logger.log(`Waiting ${seconds} ` + (seconds === 1 ? 'second' : 'seconds'));
+        Logger.log(`Waiting ${seconds} ` + (seconds === 1 ? "second" : "seconds"));
         return new Promise(resolve => setTimeout(resolve, miliseconds));
     }
 
