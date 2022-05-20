@@ -993,8 +993,8 @@ export default class Instagrampa {
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
      */
-    isAccountPrivate() {
-        const privateString = this.page.$x("//*[text()=\"This Account is Private\"]");
+    async isAccountPrivate() {
+        const privateString = await this.page.$x("//*[text()=\"This Account is Private\"]");
         return !!privateString.length;
     }
 
