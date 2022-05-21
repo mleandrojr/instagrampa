@@ -31,6 +31,9 @@ const configs = {
     /* Skips the private accounts. */
     skipPrivateAccounts: true,
 
+    /** Skips the accounts with no posts. */
+    skipEmptyAccounts: true,
+
     /* Account's Following/follows min ratio. */
     followRatioMin: 0.2,
 

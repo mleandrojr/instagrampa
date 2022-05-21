@@ -290,6 +290,8 @@ export default class Instagrampa {
         Logger.log("Unfollowing non-mutual followers.");
 
         const following = this.shuffle(await this.getFollowing());
+        Logger.log("Accounts to verify:", following);
+
         for (let i = 0; i < following.length; i++) {
 
             const username = following[i];
@@ -387,9 +389,9 @@ export default class Instagrampa {
         this.incrementCounter("hourlyUnfollowed", 60 * 60 * 1000);
         this.incrementCounter("dailyUnfollowed", 60 * 60 * 24 * 1000);
 
-        const followButton2 = await this.findFollowButton();
+        const followButton2 = await this.findUnfollowButton();
         if (!followButton2) {
-            Logger.warn("Unfollow button did not change state");
+            Logger.debug("Unfollow button did not change state");
         }
 
         await this.sleep(60 * 60 * 1000 / this.configs.maxFollowsPerHour, .2);
@@ -407,36 +409,42 @@ export default class Instagrampa {
         const users = this.shuffle(this.configs.accountsToScrape);
         const user = users[0];
 
-        Logger.log(`User ${user} drawn to be scraped`);
+        Logger.log(`User ${user} chosen to be scraped`);
 
         const followers = await this.getFollowers(user);
         Logger.log(`${followers.length} users found:`, followers);
 
         for (let i = 0; i < followers.length; i++) {
 
-            const username = followers[i];
+            try {
 
-            if (this.isAccountIgnored(username)) {
-                Logger.log(`${username} is in the do not follow list. Skipping.`);
-                continue;
+                const username = followers[i];
+
+                if (this.isAccountIgnored(username)) {
+                    Logger.warn(`${username} is in the do not follow list. Skipping.`);
+                    continue;
+                }
+
+                if (await this.isInFollowedDb(username)) {
+                    Logger.warn(`Skipping ${username} for already being followed before`);
+                    continue;
+                }
+
+                if (await this.isInUnfollowedDb(username)) {
+                    Logger.warn(`Skipping ${username} for already being unfollowed before`);
+                    continue;
+                }
+
+                while (!this.canFollowOrUnfollow()) {
+                    await this.sleep(10 * 60 * 1000);
+                }
+
+                await this.follow(username);
+                await this.sleep(this.random(1000, 10000));
+
+            } catch (err) {
+                Logger.error(err);
             }
-
-            if (await this.isInFollowedDb(username)) {
-                Logger.warn(`Skipping ${username} for already being followed before`);
-                continue;
-            }
-
-            if (await this.isInUnfollowedDb(username)) {
-                Logger.warn(`Skipping ${username} for already being unfollowed before`);
-                continue;
-            }
-
-            while (!this.canFollowOrUnfollow()) {
-                await this.sleep(10 * 60 * 1000);
-            }
-
-            await this.follow(username);
-            await this.sleep(this.random(1000, 10000));
         }
     }
 
@@ -477,17 +485,22 @@ export default class Instagrampa {
         }
 
         if (this.configs.followRatioMin !== null && ratio < this.configs.followRatioMin) {
-            Logger.log(`Account ${username} has too many follows compared to followers, skipping`);
+            Logger.warn(`Account ${username} has too many follows compared to followers, skipping`);
             return;
         }
 
         if (this.configs.followRatioMax !== null && ratio > this.configs.followRatioMax) {
-            Logger.log(`Account ${username} has too many followers compared to follows, skipping`);
+            Logger.warn(`Account ${username} has too many followers compared to follows, skipping`);
             return;
         }
 
-        if (this.skipPrivateAccounts() && this.isAccountPrivate()) {
+        if (this.skipPrivateAccounts() && await this.isAccountPrivate()) {
             Logger.warn(`Skipping ${username} for being a private account`);
+            return;
+        }
+
+        if (this.skipEmptyAccounts() && await this.isAccountEmpty()) {
+            Logger.warn(`Skipping ${username} for being an empty account`);
             return;
         }
 
@@ -502,7 +515,7 @@ export default class Instagrampa {
                 return;
             }
 
-            Logger.warn(`Follow button not found for ${username}`);
+            Logger.error(`Follow button not found for ${username}`);
             return;
         }
 
@@ -518,6 +531,8 @@ export default class Instagrampa {
         } catch (err) {
             Logger.error(`An error occurred while saving ${username} to the followed database: ${err}`);
         }
+
+        await this.sleep(1000);
 
         const followButton2 = await this.findFollowButton();
         if (followButton2) {
@@ -584,7 +599,10 @@ export default class Instagrampa {
             await this.sleep(this.random(1000, 5000));
         }
 
-        const following = this.getUsersFromList();
+        const following = this.getUsersFromList(
+            await this.getFollowingCount()
+        );
+
         return following;
     }
 
@@ -620,25 +638,48 @@ export default class Instagrampa {
             await this.sleep(this.random(1000, 5000));
         }
 
-        const followers = this.getUsersFromList();
+        const followers = this.getUsersFromList(
+            await this.getFollowersCount()
+        );
+
         return followers;
     }
 
+    /**
+     * Returns the current account's following count.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @return {number}
+     */
     async getFollowingCount() {
 
         const handler = await this.page.$x("//header//section//ul//li[3]");
         const following = await this.page.evaluate((element) => {
-            return element.querySelector("span").innerText;
+            const span = element.querySelector("span");
+            const total = span?.getAttribute("title")?.replace(/[^0-9]/, "") || span?.innerText.replace(/[^0-9]/, "");
+            return total;
         }, handler[0]);
 
         return parseInt(following);
     }
 
+    /**
+     * Returns the current account's followers count.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @return {number}
+     */
     async getFollowersCount() {
 
         const handler = await this.page.$x("//header//section//ul//li[2]");
         const followers = await this.page.evaluate((element) => {
-            return element.querySelector("span").innerText;
+            const span = element.querySelector("span");
+            const total = span?.getAttribute("title")?.replace(/[^0-9]/, "") || span?.innerText.replace(/[^0-9]/, "");
+            return total;
         }, handler[0]);
 
         return parseInt(followers);
@@ -654,32 +695,36 @@ export default class Instagrampa {
      *
      * @return {array}
      */
-    async getUsersFromList(persistent = false) {
+    async getUsersFromList(totalAccounts, persistent = false) {
 
-        Logger.log("Getting users from list");
+        Logger.log(`Getting up to ${totalAccounts} accounts from list`);
 
-        return await this.page.evaluate(async () => {
+        return await this.page.evaluate(async (totalAccounts, persistent) => {
 
-            const users = [];
+            let users = [];
 
             try {
 
-                const scrollable = document.querySelector("div[role=\"dialog\"] li").closest("ul").closest("div");
-
                 await new Promise((resolve) => {
 
-                    let totalHeight = 0;
                     let scroll = 0;
-
                     let timer = setInterval(async () => {
 
                         try {
 
+                            const scrollable = document.querySelector("div[role=\"dialog\"] li").closest("ul").closest("div");
                             scrollable.scrollTop = scrollable.scrollHeight;
-                            await new Promise(r => setTimeout(r, 100));
 
-                            const loading = scrollable.querySelectorAll("svg[aria-label=\"Loading...\"]");
-                            if (totalHeight === scrollable.scrollHeight && loading.length === 0) {
+                            await new Promise(r => setTimeout(r, 1000));
+                            const usersList = scrollable.querySelectorAll("li");
+                            for (let user of usersList) {
+                                let username = user.querySelector("a")?.getAttribute("href")?.replaceAll("/", "");
+                                if (username && !users.includes(username)) {
+                                    users.push(username);
+                                }
+                            }
+
+                            if (users.length >= totalAccounts) {
                                 clearInterval(timer);
                                 resolve();
                             }
@@ -691,26 +736,22 @@ export default class Instagrampa {
                             }
 
                             scroll++;
-                            totalHeight = scrollable.scrollHeight;
                             await new Promise(r => setTimeout(r, 3000));
 
                         } catch (err) {
+                            console.error(err);
                             clearInterval(timer);
                             resolve();
                         }
 
-                    }, 1000);
+                    }, 2000);
                 });
-
-                const usersList = scrollable.querySelectorAll("li");
-                for (const user of usersList) {
-                    users.push(user.querySelector("a").getAttribute("href").replaceAll("/", ""));
-                }
 
             } catch (err) {}
 
             return users;
-        });
+
+        }, totalAccounts, persistent);
     }
 
     /**
@@ -809,8 +850,8 @@ export default class Instagrampa {
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
      *
-     * @param {*} code Language code.
-     * @param {*} name Language name.
+     * @param {string} code Language code.
+     * @param {string} name Language name.
      */
     async setLanguage(code, name) {
 
@@ -992,10 +1033,25 @@ export default class Instagrampa {
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
+     *
+     * @return {boolean}
      */
     async isAccountPrivate() {
         const privateString = await this.page.$x("//*[text()=\"This Account is Private\"]");
-        return !!privateString.length;
+        return privateString.length > 0;
+    }
+
+    /**
+     * Returns whether the account is empty or not.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @return {boolean}
+     */
+    async isAccountEmpty() {
+        const emptyString = await this.page.$x("//*[text()=\"No Posts Yet\"]");
+        return emptyString.length > 0;
     }
 
     /**
@@ -1003,9 +1059,23 @@ export default class Instagrampa {
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
+     *
+     * @return {boolean}
      */
     skipPrivateAccounts() {
         return this.configs.skipPrivateAccounts;
+    }
+
+    /**
+     * Returns whether the empty accounts will be skipped or not.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @return {boolean}
+     */
+    skipEmptyAccounts() {
+        return this.configs.skipEmptyAccounts;
     }
 
     /**
