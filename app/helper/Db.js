@@ -62,6 +62,21 @@ export default class Db {
     }
 
     /**
+     * Gets all rows from the database.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @param  {string} key
+     *
+     * @return {string}
+     */
+    async getAll() {
+        const rows = await this.read();
+        return rows;
+    }
+
+    /**
      * Inserts a new row to the file.
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>

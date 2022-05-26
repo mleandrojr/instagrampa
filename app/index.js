@@ -75,7 +75,7 @@ export default class Instagrampa {
      * @var {object}
      */
     db = {
-        followed : null,
+        followed: null,
         unfollowed: null
     }
 
@@ -286,12 +286,10 @@ export default class Instagrampa {
      * @since  1.0.0
      */
     async unfollowNonMutual() {
-
         Logger.log("Unfollowing non-mutual followers.");
+        let following = this.configs.skipManuallyFollowed ? await this.getUsersFromDb("followed") : await this.getFollowing();
 
-        const following = this.shuffle(await this.getFollowing());
         Logger.log("Accounts to verify:", following);
-
         for (let i = 0; i < following.length; i++) {
 
             const username = following[i];
@@ -752,6 +750,22 @@ export default class Instagrampa {
             return users;
 
         }, totalAccounts, persistent);
+    }
+
+    /**
+     * Returns the users from database.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @param  {string} dd Database to be used.
+     *
+     * @return {array}
+     */
+    async getUsersFromDb(db) {
+        Logger.log(`Getting users from ${db} database`);
+        const rows = await this.db[db].getAll();
+        return Object.keys(rows);
     }
 
     /**
@@ -1255,7 +1269,7 @@ export default class Instagrampa {
         let randomIndex;
         let currentIndex = array.length
 
-        while (currentIndex != 0) {
+        while (currentIndex !== 0) {
 
             randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex--;

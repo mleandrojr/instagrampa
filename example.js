@@ -19,19 +19,22 @@ const configs = {
     /* Instagram password */
     password: "instagrampassword",
 
-    /* Unfollows the accounts who doesn't follow you back. */
+    /* Unfollow accounts who doesn't follow you back. */
     unfollowNonMutual: true,
 
-    /* Unfollow the previously followed accounts. */
+    /* Unfollow previously followed accounts. */
     unfollowPreviouslyFollowed: true,
 
     /* Amount of days to wait before unfollowing an account. */
     daysUntilUnfollow: 14,
 
-    /* Skips the private accounts. */
+    /* Skip accounts that were not followed by grandpa. */
+    skipManuallyFollowed: true,
+
+    /* Skip private accounts. */
     skipPrivateAccounts: true,
 
-    /** Skips the accounts with no posts. */
+    /** Skip accounts with no posts. */
     skipEmptyAccounts: true,
 
     /* Account's Following/follows min ratio. */
@@ -74,6 +77,24 @@ const configs = {
         "account1",
         "account2",
         "account3"
+    ],
+
+    /* Skips the accounts with these words in bio. */
+    skipIfBioContains: [
+        "free shipping",
+        "order",
+        "visa",
+        "paypal",
+        "bot",
+        "nude",
+        "forex",
+        "bitcoin",
+        "crypto",
+        "trader",
+        "investor",
+        "entrepreneur",
+        "finance",
+        "founder"
     ],
 
     /*
