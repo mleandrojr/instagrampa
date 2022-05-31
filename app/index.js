@@ -276,6 +276,10 @@ export default class Instagrampa {
             );
         }
 
+        if (status === 404) {
+            throw new Error(`URL ${url} returned a 404 not found.`);
+        }
+
         await this.sleep(3000);
     }
 
@@ -286,28 +290,35 @@ export default class Instagrampa {
      * @since  1.0.0
      */
     async unfollowNonMutual() {
+
         Logger.log("Unfollowing non-mutual followers.");
-        let following = this.configs.skipManuallyFollowed ? await this.getUsersFromDb("followed") : await this.getFollowing();
+        const following = this.configs.skipManuallyFollowed ? await this.getFollowingFromDb() : await this.getFollowing();
 
         Logger.log("Accounts to verify:", following);
         for (let i = 0; i < following.length; i++) {
 
-            const username = following[i];
-            const isProtected = this.isAccountProtected(username);
+            try {
 
-            if (isProtected) {
-                Logger.log(`${username} is protected. Skipping.`);
-                continue;
+                const username = following[i];
+                await this.gotoProfile(username);
+
+                if (await this.isAccountNotFound()) {
+                    Logger.warn(`Account ${username} not found. Skipping`);
+                    continue;
+                }
+
+                const isFollowingBack = await this.isUserFollowingBack(username);
+                Logger.log(`Is ${username} following us back?`, isFollowingBack);
+
+                if (!isFollowingBack) {
+                    await this.unfollow(username);
+                }
+
+                await this.sleep(this.random(1000, 10000));
+
+            } catch (err) {
+                Logger.error(err);
             }
-
-            const isFollowingBack = await this.isUserFollowingBack(username);
-            Logger.log(`Is ${username} following us back?`, isFollowingBack);
-
-            if (!isFollowingBack) {
-                await this.unfollow(username);
-            }
-
-            await this.sleep(this.random(1000, 10000));
         }
     }
 
@@ -461,6 +472,13 @@ export default class Instagrampa {
         const followers = await this.getFollowersCount();
         const following = await this.getFollowingCount();
         const ratio = followers / (following || 1);
+
+        const isProtected = this.isAccountProtected(username);
+
+        if (isProtected) {
+            Logger.log(`${username} is protected. Skipping.`);
+            return;
+        }
 
         if (this.configs.followMinFollowers !== null && followers < this.configs.followMinFollowers) {
             Logger.warn(`Account ${username} has too few followers, skipping`);
@@ -753,19 +771,30 @@ export default class Instagrampa {
     }
 
     /**
-     * Returns the users from database.
+     * Returns the followed accounts from database.
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
      *
-     * @param  {string} dd Database to be used.
+     * @param  {string} db Database to be used.
      *
      * @return {array}
      */
-    async getUsersFromDb(db) {
-        Logger.log(`Getting users from ${db} database`);
-        const rows = await this.db[db].getAll();
-        return Object.keys(rows);
+    async getFollowingFromDb() {
+
+        const followed = await this.db.followed.getAll();
+        const unfollowed = await this.db.unfollowed.getAll();
+        const accounts = [];
+
+        for (let key in followed) {
+            if (unfollowed.hasOwnProperty(key) && unfollowed[key] > followed[key]) {
+                continue;
+            }
+
+            accounts.push(key);
+        }
+
+        return accounts;
     }
 
     /**
@@ -969,8 +998,6 @@ export default class Instagrampa {
      */
     async isUserFollowingBack(username) {
 
-        await this.gotoProfile(username);
-
         for (;;) {
             const followingButton = await this.page.$x("//header//section//ul//li[3]");
             if (followingButton.length) {
@@ -1053,6 +1080,19 @@ export default class Instagrampa {
     async isAccountPrivate() {
         const privateString = await this.page.$x("//*[text()=\"This Account is Private\"]");
         return privateString.length > 0;
+    }
+
+    /**
+     * Returns whether the account is found or not.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  1.0.0
+     *
+     * @return {boolean}
+     */
+    async isAccountNotFound() {
+        const notFoundString = await this.page.$x("//*[text()=\"Sorry, this page isn't available.\"]");
+        return notFoundString.length > 0;
     }
 
     /**
