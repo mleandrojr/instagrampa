@@ -260,11 +260,14 @@ export default class Instagrampa {
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
      * @since  1.0.0
      *
-     * @param {string} url
+     * @param {string} url   URL to be open.
+     * @param {number} tries Trying number.
      */
-    async goto(url) {
+    async goto(url, tries) {
 
         Logger.log(`Loading ${url}`);
+
+        tries = tries || 0;
 
         const response = await this.page.goto(url);
         const status = response.status();
@@ -281,6 +284,22 @@ export default class Instagrampa {
         }
 
         await this.sleep(3000);
+
+        const handler = await this.page.$x("//body");
+        const loaded = await this.page.evaluate((element) => {
+
+            const logo = element.querySelectorAll(`[aria-label="Instagram"]`);
+            return logo.length > 0;
+
+        }, handler[0]);
+
+        if (!loaded && tries < 10) {
+            return await this.goto(url, ++tries);
+        }
+
+        if (!loaded) {
+            throw new Error(`URL ${url} cannot be loaded.`);
+        }
     }
 
     /**
@@ -292,7 +311,9 @@ export default class Instagrampa {
     async unfollowNonMutual() {
 
         Logger.log("Unfollowing non-mutual followers.");
-        const following = this.configs.skipManuallyFollowed ? await this.getFollowingFromDb() : await this.getFollowing();
+        const following = this.shuffle(
+            this.configs.skipManuallyFollowed ? await this.getFollowingFromDb() : await this.getFollowing()
+        );
 
         Logger.log("Accounts to verify:", following);
         for (let i = 0; i < following.length; i++) {
@@ -305,6 +326,13 @@ export default class Instagrampa {
                 if (await this.isAccountNotFound()) {
                     Logger.warn(`Account ${username} not found. Skipping`);
                     continue;
+                }
+
+                if (await this.isAccountPrivate()) {
+                    Logger.warn(`Account ${username} is private.`);
+                    await this.unfollow(username);
+                    await this.sleep(this.random(1000, 10000));
+                    return;
                 }
 
                 const isFollowingBack = await this.isUserFollowingBack(username);
@@ -693,6 +721,11 @@ export default class Instagrampa {
 
         const handler = await this.page.$x("//header//section//ul//li[2]");
         const followers = await this.page.evaluate((element) => {
+
+            if (typeof element === "undefined") {
+                return null;
+            }
+
             const span = element.querySelector("span");
             const total = span?.getAttribute("title")?.replace(/[^0-9]/, "") || span?.innerText.replace(/[^0-9]/, "");
             return total;
