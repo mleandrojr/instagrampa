@@ -324,7 +324,7 @@ export default class Instagrampa {
                 await this.gotoProfile(username);
 
                 if (await this.isAccountNotFound()) {
-                    Logger.warn(`Account ${username} not found. Skipping`);
+                    Logger.error(`Account ${username} not found. Skipping`);
                     continue;
                 }
 
@@ -332,7 +332,7 @@ export default class Instagrampa {
                     Logger.warn(`Account ${username} is private.`);
                     await this.unfollow(username);
                     await this.sleep(this.random(1000, 10000));
-                    return;
+                    continue;
                 }
 
                 const isFollowingBack = await this.isUserFollowingBack(username);
@@ -405,7 +405,7 @@ export default class Instagrampa {
         }
 
         await unfollowButton.click();
-        await this.sleep(1000);
+        await this.sleep(3000);
 
         const confirmHandle = await this.findUnfollowConfirmButton();
         if (!confirmHandle) {
