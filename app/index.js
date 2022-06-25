@@ -1,10 +1,10 @@
 /**
- * instagrampa
+ * Instagrampa
  *
  * This file is part of Instagrampa.
  * You are free to modify and share this project or its files.
  *
- * @package  mslovelace_bot
+ * @package  instagrampa
  * @author   Marcos Leandro <mleandrojr@yggdrasill.com.br>
  * @license  GPLv3 <http://www.gnu.org/licenses/gpl-3.0.en.html>
  */
@@ -321,6 +321,13 @@ export default class Instagrampa {
             try {
 
                 const username = following[i];
+
+                const followDb = await this.isInFollowedDb(username);
+                if (followDb && parseInt(followDb) + (this.configs.daysUntilUnfollow * 60 * 60 * 24 * 1000) > +new Date()) {
+                    Logger.warn(`Skipping ${username} because we followed them less than ${this.configs.daysUntilUnfollow} days ago.`);
+                    continue;
+                }
+
                 await this.gotoProfile(username);
 
                 if (await this.isAccountNotFound()) {
@@ -364,6 +371,13 @@ export default class Instagrampa {
         Logger.log(`Found ${followed.length} followed accounts.`);
 
         for (let username in followed) {
+
+            const followDb = await this.isInFollowedDb(username);
+            if (followDb && parseInt(followDb) + (this.configs.daysUntilUnfollow * 60 * 60 * 24 * 1000) > +new Date()) {
+                Logger.warn(`Skipping ${username} because we followed them less than ${this.configs.daysUntilUnfollow} days ago.`);
+                continue;
+            }
+
             await this.unfollow(username);
         }
 
@@ -377,12 +391,6 @@ export default class Instagrampa {
      * @since  1.0.0
      */
     async unfollow(username) {
-
-        const followDb = await this.isInFollowedDb(username);
-        if (followDb && parseInt(followDb) + (this.configs.daysUntilUnfollow * 60 * 60 * 24 * 1000) > +new Date()) {
-            Logger.warn(`Skipping ${username} because we followed them less than ${this.configs.daysUntilUnfollow} days ago.`);
-            return;
-        }
 
         while (!this.canFollowOrUnfollow()) {
             await this.sleep(10 * 60 * 1000);

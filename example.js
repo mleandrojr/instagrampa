@@ -1,10 +1,10 @@
 /**
- * instagrampa
+ * Instagrampa
  *
  * This file is part of Instagrampa.
  * You are free to modify and share this project or its files.
  *
- * @package  mslovelace_bot
+ * @package  instagrampa
  * @author   Marcos Leandro <mleandrojr@yggdrasill.com.br>
  * @license  GPLv3 <http://www.gnu.org/licenses/gpl-3.0.en.html>
  */
