@@ -288,8 +288,9 @@ export default class Instagrampa {
         const handler = await this.page.$x("//body");
         const loaded = await this.page.evaluate((element) => {
 
-            const logo = element.querySelectorAll(`[aria-label="Instagram"]`);
-            return logo.length > 0;
+            const logoByAriaLabel = element.querySelectorAll(`[aria-label="Instagram"]`);
+            const logoByAlt = element.querySelectorAll(`[alt="Instagram"]`);
+            return logoByAriaLabel.length > 0 || logoByAlt.length > 0;
 
         }, handler[0]);
 
@@ -1008,7 +1009,7 @@ export default class Instagrampa {
      * @return {boolean}
      */
     async isUserLoggedIn() {
-        return (await this.page.$x("//*[@aria-label=\"Home\"]")).length === 1;
+        return (await this.page.$x("//form[@id='loginForm']")).length === 0;
     }
 
     /**
@@ -1250,13 +1251,18 @@ export default class Instagrampa {
 
             Logger.log("Loading the cookies.");
 
+            if (!fs.existsSync(`./profiles/${this.configs.username}/cookies.json`)) {
+                Logger.log("Cookies not found.");
+                return;
+            }
+
             const cookies = JSON.parse(await fs.readFile(`./profiles/${this.configs.username}/cookies.json`));
             for (const cookie of cookies) {
                 if (cookie.name !== "ig_lang") await this.page.setCookie(cookie);
             }
 
         } catch (err) {
-            Logger.error("No cookies found");
+            Logger.error("An error occurred while loading cookies.");
         }
     }
 
