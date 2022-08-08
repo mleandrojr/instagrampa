@@ -643,7 +643,7 @@ export default class Instagrampa {
 
             Logger.log("Waiting for the following list to load");
 
-            const list = await this.page.$x("//div[@aria-label=\"Following\"]//li//a");
+            const list = await this.page.$x("//h1/div[text() = 'Following']");
             if (list || tries >= 4) {
                 break;
             }
