@@ -643,7 +643,8 @@ export default class Instagrampa {
 
             Logger.log("Waiting for the following list to load");
 
-            const list = await this.page.$x("//h1/div[text() = 'Following']");
+
+            const list = await this.page.$x("//div[@role='dialog']//div[@aria-labelledby]");
             if (list || tries >= 4) {
                 break;
             }
@@ -682,7 +683,7 @@ export default class Instagrampa {
 
             Logger.log("Waiting for the followers list to load");
 
-            const list = await this.page.$x("//div[@aria-label=\"Followers\"]//li//a");
+            const list = await this.page.$x("//div[@role='dialog']//div[@aria-labelledby]");
             if (list || tries >= 4) {
                 break;
             }
@@ -1056,7 +1057,7 @@ export default class Instagrampa {
 
             Logger.log(`Waiting for the ${username}'s following list to load`);
 
-            const list = await this.page.$x("//div[@role=\"dialog\"]//li");
+            const list = await this.page.$x("//div[@role='dialog']//div[@aria-labelledby]");
             if (list.length > 0 || tries >= 4) {
                 break;
             }
@@ -1067,12 +1068,12 @@ export default class Instagrampa {
 
         await this.sleep(this.random(1000, 3000));
 
-        const handler = await this.page.$x("//div[@role=\"dialog\"]");
+        const handler = await this.page.$x("//div[@role='dialog']");
         return await this.page.evaluate((element, nickname) => {
 
             try {
-                const firstElement = element.querySelectorAll("li")[0];
-                const anchor = firstElement.querySelector("span a");
+                const firstElement = element.querySelectorAll("div[aria-labelledby]")[0];
+                const anchor = firstElement.querySelector("a");
                 return anchor.getAttribute("href").replaceAll("/", "") === nickname;
 
             } catch (err) {
