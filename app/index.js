@@ -771,11 +771,11 @@ export default class Instagrampa {
 
                         try {
 
-                            const scrollable = document.querySelector("div[role=\"dialog\"] li").closest("ul").closest("div");
+                            const scrollable = document.querySelector("div[aria-labelledby]").parentNode.parentNode.parentNode;
                             scrollable.scrollTop = scrollable.scrollHeight;
 
                             await new Promise(r => setTimeout(r, 1000));
-                            const usersList = scrollable.querySelectorAll("li");
+                            const usersList = scrollable.querySelectorAll("div[aria-labelledby]");
                             for (let user of usersList) {
                                 let username = user.querySelector("a")?.getAttribute("href")?.replaceAll("/", "");
                                 if (username && !users.includes(username)) {
