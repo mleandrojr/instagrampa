@@ -54,6 +54,14 @@ export default class Instagrampa {
     page = null;
 
     /**
+     * Instagrampa clock in.
+     *
+     * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
+     * @since  2022-11-29
+     */
+    clockIn = 0;
+
+    /**
      * Actions counter.
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
@@ -98,6 +106,11 @@ export default class Instagrampa {
 
         this.db.followed = new Db(this.configs.username, "followed");
         this.db.unfollowed = new Db(this.configs.username, "unfollowed");
+        this.clockIn = Date.now();
+
+        setInterval(_ => {
+            this.clockIn = Date.now();
+        }, 86400000); /* 1 day */
 
         (async () => {
             try {
@@ -317,7 +330,7 @@ export default class Instagrampa {
         );
 
         Logger.log("Accounts to verify:", following);
-        for (let i = 0; i < following.length; i++) {
+        for (let i = 0, length = following.length; i < length; i++) {
 
             try {
 
@@ -460,7 +473,7 @@ export default class Instagrampa {
         const followers = await this.getFollowers(user);
         Logger.log(`${followers.length} users found:`, followers);
 
-        for (let i = 0; i < followers.length; i++) {
+        for (let i = 0, length = followers.length; i < length; i++) {
 
             try {
 
@@ -968,6 +981,12 @@ export default class Instagrampa {
      * @return {boolean}
      */
     canFollowOrUnfollow() {
+
+        const currentTime = Date.now();
+        if (currentTime > this.configs.shiftHours * 24 * 60 * 60 * 1000) {
+            Logger.log("We already clocked out");
+            return false;
+        }
 
         if (this.counter.hourlyFollowed + this.counter.hourlyUnfollowed >= this.configs.maxFollowsPerHour) {
             Logger.log("We have reached hourly follow rate limit");

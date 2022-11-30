@@ -25,6 +25,9 @@ const configs = {
     /* Unfollow previously followed accounts. */
     unfollowPreviouslyFollowed: true,
 
+    /* Instagrampa shift hours. */
+    shiftHours: 8,
+
     /* Amount of days to wait before unfollowing an account. */
     daysUntilUnfollow: 14,
 
