@@ -263,6 +263,18 @@ export default class Instagrampa {
             return this.gotoProfile(myUsername);
         }
 
+        const pageUrl = this.page.url();
+        if (pageUrl.includes(username)) {
+
+            const closeHandler = await this.page.$x("//*[@aria-label='Close']");
+            if (closeHandler.length) {
+                Logger.log(`Closing any open dialogs.`);
+                await closeHandler[0].click();
+                await this.sleep(1000);
+                return;
+            }
+        }
+
         Logger.log(`Going to profile ${username}`);
         await this.goto(`${this.instagramBaseUrl}/${username}`);
     }
@@ -429,13 +441,14 @@ export default class Instagrampa {
         await unfollowButton.click();
         await this.sleep(3000);
 
-        const confirmHandle = await this.findUnfollowConfirmButton();
-        if (!confirmHandle) {
-            Logger.warn(`Unfollow confirmation button not found for ${username}`);
+        const unfollowMenuItem = await this.findUnfollowMenuItem();
+        if (!unfollowMenuItem) {
+            Logger.warn(`Unfollow menu item not found for ${username}`);
             return;
         }
 
-        await confirmHandle.click();
+        await unfollowMenuItem.click();
+        await this.sleep(3000);
 
         try {
             await this.db.unfollowed.insert(username, +new Date());
@@ -448,7 +461,7 @@ export default class Instagrampa {
         this.incrementCounter("hourlyUnfollowed", 60 * 60 * 1000);
         this.incrementCounter("dailyUnfollowed", 60 * 60 * 24 * 1000);
 
-        const followButton2 = await this.findUnfollowButton();
+        const followButton2 = await this.findFollowButton();
         if (!followButton2) {
             Logger.debug("Unfollow button did not change state");
         }
@@ -861,17 +874,12 @@ export default class Instagrampa {
      */
     async findFollowButton() {
 
-        const followButton = await this.findButtonWithText("Follow");
-        if (followButton) {
-            return followButton;
+        const handler1 = await this.page.$x("//*[@type='button'][contains(.,'Follow')]");
+        if (handler1.length > 0) {
+            return handler1[0];
         }
 
-        const followBackButton = await this.findButtonWithText("Follow Back");
-        if (followBackButton)  {
-            return followBackButton;
-        }
-
-        return undefined;
+        return null;
     }
 
     /**
@@ -882,40 +890,25 @@ export default class Instagrampa {
      */
     async findUnfollowButton() {
 
-        const handler1 = await this.page.$x("//header//button[text()=\"Following\"]");
+        const handler1 = await this.page.$x("//*[@type='button'][contains(.,'Following')]");
         if (handler1.length > 0) {
             return handler1[0];
         }
 
-        const handler2 = await this.page.$x("//header//button[text()=\"Requested\"]");
-        if (handler2.length > 0) {
-            return handler2[0];
-        }
-
-        const handler3 = await this.page.$x("//header//button[*//span[@aria-label=\"Following\"]]");
-        if (handler3.length > 0) {
-            return handler3[0];
-        }
-
-        const handler4 = await this.page.$x("//header//button[*//*[name()=\"svg\"][@aria-label=\"Following\"]]");
-        if (handler4.length > 0) {
-            return handler4[0];
-        }
-
-        return undefined;
+        return null;
     }
 
     /**
-     * Returns the unfollow confirm button.
+     * Returns the unfollow menu item.
      *
      * @author Marcos Leandro <mleandrojr@yggdrasill.com.br>
-     * @since  1.0.0
+     * @since  2022-12-01
      *
-     * @return {object} Element handler.
+     * @return {object} Element handle.
      */
-    async findUnfollowConfirmButton() {
-        const handler = await this.page.$x("//button[text()=\"Unfollow\"]");
-        return handler[0];
+    async findUnfollowMenuItem() {
+        const handler = await this.page.$x("//*[@role='button'][contains(.,'Unfollow')]");
+        return handler[0] || null;
     }
 
     /**
