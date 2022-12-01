@@ -226,7 +226,7 @@ export default class Instagrampa {
             await this.sleep(1000);
 
             for (;;) {
-                const loginButton = (await this.page.$x("//button[.//text() = \"Log In\"]"))[0];
+                const loginButton = (await this.page.$x("//button[@type=\"submit\"]"))[0];
                 if (loginButton) {
                     await loginButton.click();
                     break;
@@ -234,7 +234,7 @@ export default class Instagrampa {
 
                 Logger.warn(
                     "Login button not found. Maybe you can help me click it?\n\
-                    And also report an issue on github with a screenshot of what you're seeing :)"
+                    And also report an issue on github with a screenshot of what you're seeing (="
                 );
 
                 await this.sleep(6000);
@@ -259,7 +259,7 @@ export default class Instagrampa {
     async gotoProfile(username) {
 
         if (typeof username === "undefined") {
-            const myUsername = await this.page.evaluate(() => window._sharedData.config.viewer.username);
+            const myUsername = await this.page.evaluate(_ => window._sharedData.config.viewer.username);
             return this.gotoProfile(myUsername);
         }
 
@@ -983,7 +983,7 @@ export default class Instagrampa {
     canFollowOrUnfollow() {
 
         const currentTime = Date.now();
-        if (currentTime > this.configs.shiftHours * 24 * 60 * 60 * 1000) {
+        if (currentTime > this.clockIn + (this.configs.shiftHours * 24 * 60 * 60 * 1000)) {
             Logger.log("We already clocked out");
             return false;
         }
