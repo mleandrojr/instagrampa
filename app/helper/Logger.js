@@ -94,7 +94,7 @@ export default class Logger {
      * @since  1.0.0
      */
     static debug() {
-        console.debug(Logger.colors.FgCyan, ...Logger.parse(...arguments), logger.colors.Reset);
+        console.debug(Logger.colors.FgCyan, ...Logger.parse(...arguments), Logger.colors.Reset);
     }
 
     /**
