@@ -12,7 +12,7 @@
       "app"
     ],
     "author": "Marcos Leandro <mleandrojr@yggdrasill.com.br>",
-    "repository": "mleandrojr/instagrampa",
+    "repository": "https://github.com/mleandrojr/instagrampa",
     "license": "GPLv3",
     "engines": {
       "node": ">=8"
