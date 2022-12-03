@@ -1380,4 +1380,3 @@ export default class Instagrampa {
         return array;
     }
 }
-
